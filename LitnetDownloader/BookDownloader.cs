@@ -1,10 +1,9 @@
-using System.Net;
 using System.Text;
-using System.Text.Json;
 using AngleSharp.Html.Parser;
 using AngleSharp.Xhtml;
 using EpubCore;
 using LitnetDownloader.Exceptions;
+using LitnetDownloader.Helpers;
 using LitnetDownloader.Values;
 
 namespace LitnetDownloader;
@@ -59,7 +58,8 @@ internal sealed class BookDownloader(
 		}
 		
 		fileName ??= $"{author} - {title}.epub";
-		fileName = SanitizeFileName(fileName);
+		fileName = FileName.Sanitize(fileName);
+		fileName = FileName.TruncatePreservingExtension(fileName, maxLength: 150);
 
 		epubWriter.Write(fileName);
 		Console.WriteLine($"Book saved to file:\n\t\"{Path.GetFullPath(fileName)}\"");
@@ -104,52 +104,5 @@ internal sealed class BookDownloader(
 		document.ToHtml(writer, XhtmlMarkupFormatter.Instance);
 		
 		return writer.ToString();
-	}
-	
-	private static string SanitizeFileName(string fileName)
-	{
-		// Windows invalid characters
-		var invalidChars = new HashSet<char> 
-		{ 
-			'<', '>', ':', '"', '/', '\\', '|', '?', '*', '\0', 
-		};
-
-		// Control characters (ASCII 0 through 31)
-		for (var i = 0; i < 32; i++)
-		{
-			invalidChars.Add((char)i);
-		}
-
-		var safeChars = fileName.Where(c => !invalidChars.Contains(c)).ToArray();
-		var safeFileName = new string(safeChars);
-
-		safeFileName = safeFileName.TrimEnd('.', ' ');
-
-		if (string.IsNullOrWhiteSpace(safeFileName))
-		{
-			return Guid.NewGuid().ToString();
-		}
-
-		// Truncate to avoid File System limits (typically 255 characters)
-		// Preserve extension and truncate filename part
-		if (safeFileName.Length > 245)
-		{
-			var lastDotIndex = safeFileName.LastIndexOf('.');
-			if (lastDotIndex > 0)
-			{
-				var extension = safeFileName[lastDotIndex..];
-				var maxNameLength = 245 - extension.Length;
-				if (maxNameLength > 0)
-				{
-					safeFileName = safeFileName[..maxNameLength] + extension;
-				}
-			}
-			else
-			{
-				safeFileName = safeFileName[..245];
-			}
-		}
-
-		return safeFileName;
 	}
 }
