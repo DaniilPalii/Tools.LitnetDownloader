@@ -16,11 +16,12 @@ Console.CancelKeyPress += (_, _) =>
 	cancellationTokenSource.Cancel();
 };
 
-var bookDownloader = new BookDownloader();
+var litnetHttpClient = new LitnetHttpClient();
 
 if (credentials is not null)
-	await bookDownloader.AuthenticateAsync(credentials.Value, cancellationTokenSource.Token);
+	await litnetHttpClient.AuthenticateAsync(credentials.Value, cancellationTokenSource.Token);
 
+var bookDownloader = new BookDownloader(litnetHttpClient);
 await bookDownloader.DownloadAsEpubAsync(slug, cancellationTokenSource.Token, outFile);
 
 Console.WriteLine("Done");
