@@ -1,10 +1,8 @@
 using System.Text;
 using AngleSharp.Html.Parser;
-using AngleSharp.Xhtml;
 using EpubCore;
 using LitnetDownloader.Exceptions;
 using LitnetDownloader.Helpers;
-using LitnetDownloader.Parsing;
 using LitnetDownloader.Values;
 
 namespace LitnetDownloader;
@@ -77,15 +75,6 @@ internal sealed class BookDownloader(
 		}
 		
 		var chapterContent = chapterContentBuilder.ToString();
-		return await ToXhtmlAsync(chapterContent);
-	}
-
-	private async Task<string> ToXhtmlAsync(string chapterContent)
-	{
-		var document = await htmlParser.ParseDocumentAsync(chapterContent);
-		await using var writer = new StringWriter();
-		document.ToHtml(writer, XhtmlMarkupFormatter.Instance);
-		
-		return writer.ToString();
+		return await Xhtml.FromHtmlAsync(chapterContent, htmlParser);
 	}
 }
