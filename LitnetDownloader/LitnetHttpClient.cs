@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using AngleSharp.Html.Parser;
 using LitnetDownloader.Exceptions;
+using LitnetDownloader.Parsing;
 using LitnetDownloader.Values;
 
 namespace LitnetDownloader;
@@ -15,7 +16,7 @@ internal class LitnetHttpClient
 	private string csrfToken = string.Empty;
 
 	private const string BaseUrl = "https://litnet.com";
-	private const string BooksUrl = "https://litnet.com/reader";
+	private const string BooksReaderUrl = "https://litnet.com/reader";
 	private const string GetPageUrl = "https://litnet.com/reader/get-page";
 	private const string LoginUrl = "https://litnet.com/auth/login?classic=1&link=https://litnet.com/";
 
@@ -42,24 +43,24 @@ internal class LitnetHttpClient
 			throw new BadAuthorizationException();
 	}
 
-	public async Task<string> GetBookWebPageAsync(string bookSlug, CancellationToken cancellationToken)
+	public async Task<BookReaderWebPage> GetBookReaderWebPageAsync(string bookSlug, CancellationToken cancellationToken)
 	{
 		await Task.Delay(BetweenRequestsTimeout, cancellationToken);
-		var bookUrl = $"{BooksUrl}/{bookSlug}";
+		var bookReaderUrl = $"{BooksReaderUrl}/{bookSlug}";
 
-		var bookPageHtml = await httpClient.GetStringAsync(bookUrl, cancellationToken);
-		Console.WriteLine($"Book page loaded: {bookUrl}");
+		var webPageHtml = await httpClient.GetStringAsync(bookReaderUrl, cancellationToken);
+		Console.WriteLine($"Book page loaded: {bookReaderUrl}");
 
-		return bookPageHtml;
+		return await BookReaderWebPage.ParseAsync(htmlParser, webPageHtml);
 	}
 	
-	public async Task<(string content, bool isPageLast)> GetPageContentAsync(
+	public async Task<(string content, bool isPageLast)> GetBookPageContentAsync(
 		string bookSlug,
 		string chapterId,
 		int pageIndex,
 		CancellationToken cancellationToken)
 	{
-		var chapterUrl = $"{BooksUrl}/{bookSlug}?c={chapterId}";
+		var chapterUrl = $"{BooksReaderUrl}/{bookSlug}?c={chapterId}";
 		var response = await PostAsync(
 			GetPageUrl,
 			contentParameters:

@@ -4,6 +4,7 @@ using AngleSharp.Xhtml;
 using EpubCore;
 using LitnetDownloader.Exceptions;
 using LitnetDownloader.Helpers;
+using LitnetDownloader.Parsing;
 using LitnetDownloader.Values;
 
 namespace LitnetDownloader;
@@ -18,34 +19,16 @@ internal sealed class BookDownloader(
 		CancellationToken cancellationToken,
 		string? fileName = null)
 	{
-		var bookWebPageHtml = await litnetHttpClient.GetBookWebPageAsync(bookSlug, cancellationToken);
-		var bookWebPage = await htmlParser.ParseDocumentAsync(bookWebPageHtml);
-
 		var epubWriter = new EpubWriter();
 		
-		var title = bookWebPage.QuerySelector(".book-heading")?.TextContent.Trim() ?? throw new NoDataException("Book title not found");
+		(var title, var author, var chapters) = await litnetHttpClient.GetBookReaderWebPageAsync(bookSlug, cancellationToken);
 		epubWriter.SetTitle(title);
-		
-		var author = bookWebPage.QuerySelector(".sa-name")?.TextContent.Trim() ?? throw new NoDataException("Author not found");
 		epubWriter.AddAuthor(author);
 
 		// writer.SetCover();
 		
 		epubWriter.SetUniqueIdentifier(bookSlug);
 		
-		var chapters =
-			bookWebPage 
-				.QuerySelector(selectors: "select[name='chapter']")
-				?.QuerySelectorAll(selectors: "option")
-				.Select(
-					selector: option =>
-						new ChapterInfo(
-							Id: option.GetAttribute(name: "value")
-								?? throw new NoDataException(message: "Chapter option without value"),
-							option.TextContent))
-				.ToArray()
-			?? throw new NoDataException(message: "No chapter list found on book page");
-
 		Console.WriteLine($"Number of chapters: {chapters.Length}");
 
 		for (var i = 0; i < chapters.Length && i < 3 && !cancellationToken.IsCancellationRequested; i++)
@@ -82,7 +65,7 @@ internal sealed class BookDownloader(
 			var pageIndex = 1;
 			while (!isPageLast && !cancellationToken.IsCancellationRequested)
 			{
-				(var pageContent, isPageLast) = await litnetHttpClient.GetPageContentAsync(bookSlug, chapter.Id, pageIndex, cancellationToken);
+				(var pageContent, isPageLast) = await litnetHttpClient.GetBookPageContentAsync(bookSlug, chapter.Id, pageIndex, cancellationToken);
 				chapterContentBuilder.Append(pageContent);
 				pageIndex++;
 			}
