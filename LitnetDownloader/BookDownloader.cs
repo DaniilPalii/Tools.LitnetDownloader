@@ -18,14 +18,14 @@ internal sealed class BookDownloader(
 		string? fileName = null)
 	{
 		var epubWriter = new EpubWriter();
+		epubWriter.SetUniqueIdentifier(bookSlug);
 		
 		(var title, var author, var chapters) = await litnetHttpClient.GetBookReaderWebPageAsync(bookSlug, cancellationToken);
 		epubWriter.SetTitle(title);
 		epubWriter.AddAuthor(author);
 
-		// writer.SetCover();
-		
-		epubWriter.SetUniqueIdentifier(bookSlug);
+		var bookInfoWebPage = await litnetHttpClient.GetBookInfoWebPageAsync(bookSlug, cancellationToken);
+		epubWriter.SetCover(bookInfoWebPage.Cover, ImageFormat.Jpeg);
 		
 		Console.WriteLine($"Number of chapters: {chapters.Length}");
 

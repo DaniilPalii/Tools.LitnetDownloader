@@ -9,7 +9,7 @@ internal record BookReaderWebPage(
 	string Author,
 	ChapterInfo[] Chapters)
 {
-	public static async Task<BookReaderWebPage> ParseAsync(IHtmlParser htmlParser, string webPageHtml)
+	public static async Task<BookReaderWebPage> ParseAsync(string webPageHtml, IHtmlParser htmlParser)
 	{
 		var htmlDocument = await htmlParser.ParseDocumentAsync(webPageHtml);
 

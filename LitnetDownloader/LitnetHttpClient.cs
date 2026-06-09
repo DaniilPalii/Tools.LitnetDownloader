@@ -16,7 +16,8 @@ internal class LitnetHttpClient
 	private string csrfToken = string.Empty;
 
 	private const string BaseUrl = "https://litnet.com";
-	private const string BooksReaderUrl = "https://litnet.com/reader";
+	private const string BookInfoUrlPrefix = "https://litnet.com/book/";
+	private const string BookReaderUrlPrefix = "https://litnet.com/reader/";
 	private const string GetPageUrl = "https://litnet.com/reader/get-page";
 	private const string LoginUrl = "https://litnet.com/auth/login?classic=1&link=https://litnet.com/";
 
@@ -42,16 +43,27 @@ internal class LitnetHttpClient
 		if (!response.IsSuccessStatusCode)
 			throw new BadAuthorizationException();
 	}
+	
+	public async Task<BookInfoWebPage> GetBookInfoWebPageAsync(string bookSlug, CancellationToken cancellationToken)
+	{
+		await Task.Delay(BetweenRequestsTimeout, cancellationToken);
+		var bookInfoUrl = BookInfoUrlPrefix + bookSlug;
+
+		var webPageHtml = await httpClient.GetStringAsync(bookInfoUrl, cancellationToken);
+		Console.WriteLine($"Book info page loaded: {bookInfoUrl}");
+
+		return await BookInfoWebPage.ParseAsync(webPageHtml, htmlParser, httpClient);
+	}
 
 	public async Task<BookReaderWebPage> GetBookReaderWebPageAsync(string bookSlug, CancellationToken cancellationToken)
 	{
 		await Task.Delay(BetweenRequestsTimeout, cancellationToken);
-		var bookReaderUrl = $"{BooksReaderUrl}/{bookSlug}";
+		var bookReaderUrl = BookReaderUrlPrefix + bookSlug;
 
 		var webPageHtml = await httpClient.GetStringAsync(bookReaderUrl, cancellationToken);
-		Console.WriteLine($"Book page loaded: {bookReaderUrl}");
+		Console.WriteLine($"Book reader page loaded: {bookReaderUrl}");
 
-		return await BookReaderWebPage.ParseAsync(htmlParser, webPageHtml);
+		return await BookReaderWebPage.ParseAsync(webPageHtml, htmlParser);
 	}
 	
 	public async Task<(string content, bool isPageLast)> GetBookPageContentAsync(
@@ -60,7 +72,7 @@ internal class LitnetHttpClient
 		int pageIndex,
 		CancellationToken cancellationToken)
 	{
-		var chapterUrl = $"{BooksReaderUrl}/{bookSlug}?c={chapterId}";
+		var chapterUrl = $"{BookReaderUrlPrefix}{bookSlug}?c={chapterId}";
 		var response = await PostAsync(
 			GetPageUrl,
 			contentParameters:
