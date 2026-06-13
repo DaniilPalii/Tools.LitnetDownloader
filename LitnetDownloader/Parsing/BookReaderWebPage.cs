@@ -19,15 +19,17 @@ internal record BookReaderWebPage(
 		var author = htmlDocument.QuerySelector(".sa-name")?.TextContent.Trim()
 			?? throw new NoDataException("Author not found");
 
+		var chapterIndex = 1;
 		var chapters = htmlDocument
 				.QuerySelector(selectors: "select[name='chapter']")
 				?.QuerySelectorAll(selectors: "option")
 				.Select(
 					selector: option =>
 						new ChapterInfo(
-							Id: option.GetAttribute(name: "value")
-							?? throw new NoDataException(message: "Chapter option without value"),
-							option.TextContent))
+							Index: chapterIndex++,
+							Id: option.GetAttribute("value") 
+								?? throw new NoDataException("Chapter option without value"),
+							Title: option.TextContent))
 				.ToArray()
 			?? throw new NoDataException(message: "No chapter list found");
 		

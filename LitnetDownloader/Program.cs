@@ -22,6 +22,8 @@ if (credentials is not null)
 	await litnetHttpClient.AuthenticateAsync(credentials.Value, cancellationTokenSource.Token);
 
 var bookDownloader = new BookDownloader(litnetHttpClient);
-await bookDownloader.DownloadAsEpubAsync(slug, cancellationTokenSource.Token, outFile);
+await bookDownloader.DownloadAsEpubAsync(
+	"nasledie-rozy-tanec-dlya-demona-epizod-2-b418009",
+	cancellationTokenSource.Token);
 
 Console.WriteLine("Done");

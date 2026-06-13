@@ -1,3 +1,6 @@
 namespace LitnetDownloader.Values;
 
-internal record struct ChapterInfo(string Id, string Title);
+internal record struct ChapterInfo(
+	int Index,
+	string Id,
+	string Title);

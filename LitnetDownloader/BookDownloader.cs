@@ -15,6 +15,7 @@ internal sealed class BookDownloader(
 	public async Task DownloadAsEpubAsync(
 		string bookSlug,
 		CancellationToken cancellationToken,
+		Range? chapterRange = null,
 		string? fileName = null)
 	{
 		var epubWriter = new EpubWriter();
@@ -26,16 +27,28 @@ internal sealed class BookDownloader(
 
 		var bookInfoWebPage = await litnetHttpClient.GetBookInfoWebPageAsync(bookSlug, cancellationToken);
 		epubWriter.SetCover(bookInfoWebPage.Cover, ImageFormat.Jpeg);
-		
-		Console.WriteLine($"Number of chapters: {chapters.Length}");
+		   
+		Console.WriteLine($"Total number of chapters: {chapters.Length}");
 
-		for (var i = 0; i < chapters.Length && i < 3 && !cancellationToken.IsCancellationRequested; i++)
+		if (chapterRange is not null)
+			chapters = chapters[chapterRange.Value];
+
+		try
 		{
-			var chapter = chapters[i];
-			var chapterContent = await GetChapterContentAsync(bookSlug, chapter, cancellationToken);
+			foreach(var chapter in chapters)
+			{
+				var chapterContent = await GetChapterContentAsync(bookSlug, chapter, cancellationToken);
 			
-			epubWriter.AddChapter(chapter.Title, chapterContent);
-			Console.WriteLine($"Got chapter {i + 1} out of {chapters.Length}");
+				epubWriter.AddChapter(chapter.Title, chapterContent);
+				Console.WriteLine($"Got chapter {chapter.Index}");
+			
+				if (cancellationToken.IsCancellationRequested)
+					break;
+			}
+		}
+		catch (NoDataException ex)
+		{
+			Console.WriteLine($"Error while getting chapters. Saving available data.\n{ex.Message}");
 		}
 		
 		fileName ??= $"{author} - {title}.epub";
@@ -69,10 +82,6 @@ internal sealed class BookDownloader(
 			}
 		}
 		catch (OperationCanceledException) { }
-		catch (NoDataException ex)
-		{
-			Console.WriteLine(value: "Error! " + ex.Message);
-		}
 		
 		var chapterContent = chapterContentBuilder.ToString();
 		return await Xhtml.FromHtmlAsync(chapterContent, htmlParser);
