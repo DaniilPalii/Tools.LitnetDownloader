@@ -4,7 +4,9 @@ namespace LitnetDownloader;
 
 public class LitnetBrowserClient
 {
-	public static async Task<List<System.Net.Cookie>> AuthenticateAsync(string loginUrl)
+	private const string LoginUrl = "https://litnet.com/auth/login?classic=1&link=https%3A%2F%2Flitnet.com%2F";
+	
+	public static async Task<List<System.Net.Cookie>> AuthenticateAsync()
 	{
 		Console.WriteLine("Opening browser for interactive login");
 		
@@ -12,7 +14,7 @@ public class LitnetBrowserClient
 		await using var browser = await playwright.Firefox.LaunchAsync(options: new() { Headless = false });
 		var page = await browser.NewPageAsync();
 		await page.GotoAsync(
-			loginUrl,
+			LoginUrl,
 			options: new()
 			{
 				Timeout = TimeSpan.FromMinutes(15).Milliseconds,
@@ -27,6 +29,7 @@ public class LitnetBrowserClient
 		await browser.CloseAsync();
 		
 		return playwrightCookies
+			.Where(cookie => cookie.Domain is ".litnet.com" or "litnet.com")
 			.Select(
 				playwrightCookie => new System.Net.Cookie(playwrightCookie.Name, playwrightCookie.Value)
 				{

@@ -14,14 +14,11 @@ internal class LitnetHttpClient
 	private readonly HttpClientHandler httpClientHandler;
 	private readonly HtmlParser htmlParser = new();
 	private string csrfToken = string.Empty;
-	private readonly string cookieFilePath = Path.Combine(AppContext.BaseDirectory, ".litnet_cookies");
 
 	private const string BaseUrl = "https://litnet.com";
 	private const string BookInfoUrlPrefix = "https://litnet.com/book/";
 	private const string BookReaderUrlPrefix = "https://litnet.com/reader/";
 	private const string GetPageUrl = "https://litnet.com/reader/get-page";
-	private const string LoginUrl = "https://litnet.com/auth/login?classic=1&link=https%3A%2F%2Flitnet.com%2F";
-	private const string Domain = "litnet.com";
 
 	public LitnetHttpClient()
 	{
@@ -30,19 +27,23 @@ internal class LitnetHttpClient
 
 	public async Task AuthenticateAsync(CancellationToken cancellationToken)
 	{
-		var cookies = await LitnetBrowserClient.AuthenticateAsync(LoginUrl);
+		var cookies = await CookieStorage.LoadCookiesAsync();
+
+		if (cookies.Count > 0)
+		{
+			Console.WriteLine($"Loaded {cookies.Count} cookies from storage");
+		}
+		else
+		{
+			cookies = await LitnetBrowserClient.AuthenticateAsync();
+			await CookieStorage.SaveCookiesAsync(cookies);
+			Console.WriteLine("Saved cookies to storage");
+		}
+
+		var baseUri = new Uri(BaseUrl);
 		
 		foreach (var cookie in cookies)
-		{
-			try 
-			{ 
-				httpClientHandler.CookieContainer.Add(new Uri(BaseUrl), cookie);
-			}
-			catch (CookieException)
-			{
-				Console.WriteLine($"Failed to add cookie: {cookie.Name}={cookie.Value}, Domain={cookie.Domain}, Path={cookie.Path}");
-			}
-		}
+			httpClientHandler.CookieContainer.Add(baseUri, cookie);
 
 		var verificationHtml = await httpClient.GetStringAsync(BaseUrl, cancellationToken);
 		var parsedVerificationHtml = await htmlParser.ParseDocumentAsync(verificationHtml);
