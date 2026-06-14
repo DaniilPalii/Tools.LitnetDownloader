@@ -1,49 +1,78 @@
 using System.Net;
 using System.Text.Json;
 using AngleSharp.Html.Parser;
+using OpenQA.Selenium.Firefox;
 using LitnetDownloader.Exceptions;
 using LitnetDownloader.Parsing;
-using LitnetDownloader.Values;
 
 namespace LitnetDownloader;
 
 internal class LitnetHttpClient
 {
-	public TimeSpan BetweenRequestsTimeout { get; set; } = TimeSpan.FromSeconds(seconds: 10);
+	public TimeSpan BetweenRequestsTimeout { get; set; } = TimeSpan.FromSeconds(seconds: 3);
 	
-	private readonly HttpClient httpClient = CreateHttpClient();
+	private readonly HttpClient httpClient;
+	private readonly HttpClientHandler httpClientHandler;
 	private readonly HtmlParser htmlParser = new();
 	private string csrfToken = string.Empty;
+	private readonly string cookieFilePath = Path.Combine(AppContext.BaseDirectory, ".litnet_cookies");
 
 	private const string BaseUrl = "https://litnet.com";
 	private const string BookInfoUrlPrefix = "https://litnet.com/book/";
 	private const string BookReaderUrlPrefix = "https://litnet.com/reader/";
 	private const string GetPageUrl = "https://litnet.com/reader/get-page";
-	private const string LoginUrl = "https://litnet.com/auth/login?classic=1&link=https://litnet.com/";
+	private const string LoginUrl = "https://litnet.com/auth/login?classic=1&link=https%3A%2F%2Flitnet.com%2F";
+	private const string Domain = "litnet.com";
 
-	public async Task AuthenticateAsync(Credentials credentials, CancellationToken cancellationToken)
+	public LitnetHttpClient()
 	{
-		var html = await httpClient.GetStringAsync(BaseUrl, cancellationToken);
-		var htmlDocument = await htmlParser.ParseDocumentAsync(html);
-
-		var csrfTokenMeta = htmlDocument.QuerySelector(selectors: "meta[name='csrf-token']");
-		csrfToken = csrfTokenMeta?.GetAttribute(name: "content") ?? string.Empty;
-
-		var response = await PostAsync(
-			LoginUrl,
-			contentParameters:
-			[
-				new(key: "LoginForm[login]", value: credentials.Login),
-				new(key: "LoginForm[password]", value: credentials.Password),
-				new(key: "ajax", value: "w0"),
-			],
-			referer: BaseUrl,
-			cancellationToken);
-
-		if (!response.IsSuccessStatusCode)
-			throw new BadAuthorizationException();
+		(httpClient, httpClientHandler) = CreateHttpClient();
 	}
-	
+
+	public async Task AuthenticateAsync(CancellationToken cancellationToken)
+	{
+		Console.WriteLine("Launching Firefox for interactive login. Please complete CAPTCHA in the opened browser.");
+
+		using var webDriver = CreateWebDriver();
+
+		try
+		{
+			Console.WriteLine("Opening browser for interactive login. Press enter after completing login and CAPTCHA.");
+			webDriver.Navigate().GoToUrl(LoginUrl);
+
+			Console.ReadLine();
+
+			var seleniumCookies = webDriver.Manage().Cookies.AllCookies;
+			foreach (var seleniumCookie in seleniumCookies)
+			{
+				var cookie = new System.Net.Cookie(seleniumCookie.Name, seleniumCookie.Value)
+				{
+					Domain = seleniumCookie.Domain,
+					Path = seleniumCookie.Path,
+					Secure = seleniumCookie.Secure,
+				};
+				httpClientHandler.CookieContainer.Add(new Uri(BaseUrl), cookie);
+			}
+
+			var verificationHtml = await httpClient.GetStringAsync(BaseUrl, cancellationToken);
+			var parsedVerificationHtml = await htmlParser.ParseDocumentAsync(verificationHtml);
+			var csrfTokenMeta = parsedVerificationHtml.QuerySelector("meta[name='csrf-token']");
+			csrfToken = csrfTokenMeta?.GetAttribute("content") 
+				?? throw new NoDataException("CSRF token not found after login");
+
+			if (verificationHtml.Contains("Авторизация") || verificationHtml.Contains("LoginForm"))
+			{
+				throw new BadAuthorizationException();
+			}
+
+			Console.WriteLine("Authentication successful");
+		}
+		finally
+		{
+			try { webDriver.Quit(); } catch { }
+		}
+	}
+
 	public async Task<BookInfoWebPage> GetBookInfoWebPageAsync(string bookSlug, CancellationToken cancellationToken)
 	{
 		await Task.Delay(BetweenRequestsTimeout, cancellationToken);
@@ -85,13 +114,17 @@ internal class LitnetHttpClient
 			cancellationToken: cancellationToken);
 
 		var responseText = await response.Content.ReadAsStringAsync(cancellationToken);
+		
 		using var jsonDocument = JsonDocument.Parse(responseText);
 		var root = jsonDocument.RootElement;
 
 		var status = root.GetProperty("status").GetInt32();
 
 		if (status is not 1)
-			throw new NoDataException(message: $"Page status is not 1 but {status}");
+		{
+			var errorData = root.TryGetProperty("data", out var dataProperty) ? dataProperty.GetString() : "Unknown error";
+			throw new NoDataException(message: $"Page status is not 1 but {status}. Response: {errorData}");
+		}
 
 		var content = root.GetProperty("data").GetString()
 			?? throw new NoDataException(message: $"No data found for page {pageIndex}");
@@ -124,7 +157,7 @@ internal class LitnetHttpClient
 		return await httpClient.SendAsync(request, cancellationToken);
 	}
 	
-	private static HttpClient CreateHttpClient()
+	private static (HttpClient, HttpClientHandler) CreateHttpClient()
 	{
 		var handler = new HttpClientHandler
 		{
@@ -133,10 +166,22 @@ internal class LitnetHttpClient
 		};
 
 		var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(seconds: 100) };
-		httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(input: "Browser 2.1");
+		httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(input: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
 		httpClient.DefaultRequestHeaders.AcceptLanguage.ParseAdd(input: "en-US,en;q=0.8");
 		httpClient.DefaultRequestHeaders.Add(name: "x-requested-with", value: "XMLHttpRequest");
 
-		return httpClient;
+		return (httpClient, handler);
+	}
+
+	private static FirefoxDriver CreateWebDriver()
+	{
+		var firefoxDriverService = FirefoxDriverService.CreateDefaultService();
+		firefoxDriverService.HideCommandPromptWindow = true;
+		
+		var firefoxOptions = new FirefoxOptions();
+		firefoxOptions.AddArgument("--width=1200");
+		firefoxOptions.AddArgument("--height=800");
+
+		return new FirefoxDriver(firefoxDriverService, firefoxOptions);
 	}
 }
