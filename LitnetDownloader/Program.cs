@@ -18,6 +18,7 @@ await litnetHttpClient.AuthenticateAsync(cancellationTokenSource.Token);
 var bookDownloader = new BookDownloader(litnetHttpClient);
 await bookDownloader.DownloadAsEpubAsync(
 	"nasledie-rozy-tanec-dlya-demona-epizod-2-b418009",
-	cancellationTokenSource.Token);
+	cancellationTokenSource.Token,
+	chapterRange: 7..8);
 
 Console.WriteLine("Done");

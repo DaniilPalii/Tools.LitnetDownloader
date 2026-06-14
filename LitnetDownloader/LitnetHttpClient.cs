@@ -31,46 +31,21 @@ internal class LitnetHttpClient
 
 	public async Task AuthenticateAsync(CancellationToken cancellationToken)
 	{
-		Console.WriteLine("Launching Firefox for interactive login. Please complete CAPTCHA in the opened browser.");
+		var cookies = LitnetSeleniumClient.Authenticate(LoginUrl, cancellationToken);
+		
+		foreach (var cookie in cookies)
+			httpClientHandler.CookieContainer.Add(new Uri(BaseUrl), cookie);
 
-		using var webDriver = CreateWebDriver();
+		var verificationHtml = await httpClient.GetStringAsync(BaseUrl, cancellationToken);
+		var parsedVerificationHtml = await htmlParser.ParseDocumentAsync(verificationHtml);
+		var csrfTokenMeta = parsedVerificationHtml.QuerySelector("meta[name='csrf-token']");
+		csrfToken = csrfTokenMeta?.GetAttribute("content") 
+			?? throw new NoDataException("CSRF token not found after login");
 
-		try
-		{
-			Console.WriteLine("Opening browser for interactive login. Press enter after completing login and CAPTCHA.");
-			webDriver.Navigate().GoToUrl(LoginUrl);
+		if (verificationHtml.Contains("Авторизация") || verificationHtml.Contains("LoginForm"))
+			throw new BadAuthorizationException();
 
-			Console.ReadLine();
-
-			var seleniumCookies = webDriver.Manage().Cookies.AllCookies;
-			foreach (var seleniumCookie in seleniumCookies)
-			{
-				var cookie = new System.Net.Cookie(seleniumCookie.Name, seleniumCookie.Value)
-				{
-					Domain = seleniumCookie.Domain,
-					Path = seleniumCookie.Path,
-					Secure = seleniumCookie.Secure,
-				};
-				httpClientHandler.CookieContainer.Add(new Uri(BaseUrl), cookie);
-			}
-
-			var verificationHtml = await httpClient.GetStringAsync(BaseUrl, cancellationToken);
-			var parsedVerificationHtml = await htmlParser.ParseDocumentAsync(verificationHtml);
-			var csrfTokenMeta = parsedVerificationHtml.QuerySelector("meta[name='csrf-token']");
-			csrfToken = csrfTokenMeta?.GetAttribute("content") 
-				?? throw new NoDataException("CSRF token not found after login");
-
-			if (verificationHtml.Contains("Авторизация") || verificationHtml.Contains("LoginForm"))
-			{
-				throw new BadAuthorizationException();
-			}
-
-			Console.WriteLine("Authentication successful");
-		}
-		finally
-		{
-			try { webDriver.Quit(); } catch { }
-		}
+		Console.WriteLine("Authentication successful");
 	}
 
 	public async Task<BookInfoWebPage> GetBookInfoWebPageAsync(string bookSlug, CancellationToken cancellationToken)
@@ -171,17 +146,5 @@ internal class LitnetHttpClient
 		httpClient.DefaultRequestHeaders.Add(name: "x-requested-with", value: "XMLHttpRequest");
 
 		return (httpClient, handler);
-	}
-
-	private static FirefoxDriver CreateWebDriver()
-	{
-		var firefoxDriverService = FirefoxDriverService.CreateDefaultService();
-		firefoxDriverService.HideCommandPromptWindow = true;
-		
-		var firefoxOptions = new FirefoxOptions();
-		firefoxOptions.AddArgument("--width=1200");
-		firefoxOptions.AddArgument("--height=800");
-
-		return new FirefoxDriver(firefoxDriverService, firefoxOptions);
 	}
 }
