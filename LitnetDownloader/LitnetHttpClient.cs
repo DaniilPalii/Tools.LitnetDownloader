@@ -1,7 +1,6 @@
 using System.Net;
 using System.Text.Json;
 using AngleSharp.Html.Parser;
-using OpenQA.Selenium.Firefox;
 using LitnetDownloader.Exceptions;
 using LitnetDownloader.Parsing;
 
@@ -31,10 +30,19 @@ internal class LitnetHttpClient
 
 	public async Task AuthenticateAsync(CancellationToken cancellationToken)
 	{
-		var cookies = LitnetSeleniumClient.Authenticate(LoginUrl, cancellationToken);
+		var cookies = await LitnetBrowserClient.AuthenticateAsync(LoginUrl);
 		
 		foreach (var cookie in cookies)
-			httpClientHandler.CookieContainer.Add(new Uri(BaseUrl), cookie);
+		{
+			try 
+			{ 
+				httpClientHandler.CookieContainer.Add(new Uri(BaseUrl), cookie);
+			}
+			catch (CookieException)
+			{
+				Console.WriteLine($"Failed to add cookie: {cookie.Name}={cookie.Value}, Domain={cookie.Domain}, Path={cookie.Path}");
+			}
+		}
 
 		var verificationHtml = await httpClient.GetStringAsync(BaseUrl, cancellationToken);
 		var parsedVerificationHtml = await htmlParser.ParseDocumentAsync(verificationHtml);
