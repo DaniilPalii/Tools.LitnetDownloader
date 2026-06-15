@@ -1,4 +1,8 @@
-﻿using LitnetDownloader;
+﻿using System.Text;
+using LitnetDownloader;
+
+Console.OutputEncoding = Encoding.UTF8;
+Console.InputEncoding = Encoding.UTF8;
 
 // var slug = args.Length > 0 ? args[0] : "nasledie-rozy-tanec-dlya-demona-epizod-2-b418009";
 // var outFile = args.Length > 1 ? args[1] : null;
