@@ -1,6 +1,5 @@
 using System.Text;
 using LitnetDownloader.Exceptions;
-using LitnetDownloader.Helpers;
 using LitnetDownloader.Values;
 
 namespace LitnetDownloader;
@@ -8,7 +7,7 @@ namespace LitnetDownloader;
 internal sealed class BookDownloader(
 	LitnetHttpClient litnetHttpClient)
 {
-	public async Task DownloadAsEpubAsync(
+	public async Task<EpubDocument> DownloadAsEpubAsync(
 		string bookSlug,
 		CancellationToken cancellationToken,
 		Range? chapterRange = null,
@@ -47,12 +46,7 @@ internal sealed class BookDownloader(
 			Console.WriteLine($"Error while getting chapters. Saving available data.\n{ex.Message}");
 		}
 		
-		fileName ??= $"{author} - {title}.epub";
-		fileName = FileName.Sanitize(fileName);
-		fileName = FileName.TruncatePreservingExtension(fileName, maxLength: 150);
-
-		epubDocument.WriteToFile(fileName);
-		Console.WriteLine($"Book saved to file:\n\t\"{Path.GetFullPath(fileName)}\"");
+		return epubDocument;
 	}
 
 	private async Task<string> GetChapterContentAsync(

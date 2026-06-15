@@ -1,3 +1,4 @@
+using LitnetDownloader.Helpers;
 using VieappsEpubDocument = net.vieapps.Components.Utility.Epub.Document;
 
 namespace LitnetDownloader;
@@ -23,9 +24,15 @@ internal class EpubDocument
 
 	public string Author
 	{
-		set => internalEpubDocument.AddAuthor(value);
+		get => field;
+
+		set
+		{  
+			field = value;
+			internalEpubDocument.AddAuthor(value);
+		}
 	}
-	
+
 	public string Description
 	{
 		set => internalEpubDocument.AddDescription(value);
@@ -41,9 +48,20 @@ internal class EpubDocument
 		set => internalEpubDocument.AddLanguage(value);
 	}
 	
-	private string Title
+	public string Title
 	{
-		set => internalEpubDocument.AddTitle(value);
+		get => field;
+
+		private set
+		{
+			field = value;
+			internalEpubDocument.AddTitle(value);
+		}
+	}
+
+	public string Series
+	{
+		set => internalEpubDocument.AddMetaItem("calibre:series", value);
 	}
 
 	public byte[] Cover
@@ -71,9 +89,15 @@ internal class EpubDocument
 			playOrder: index);
 	}
 
-	public void WriteToFile(string fileName)
+	public string WriteToFile(string? fileName = null)
 	{
+		fileName ??= $"{Author} - {Title}.epub";
+		fileName = FileName.Sanitize(fileName);
+		fileName = FileName.TruncatePreservingExtension(fileName, maxLength: 150);
+		
 		internalEpubDocument.Generate(fileName);
+
+		return Path.GetFullPath(fileName);
 	}
 	
 	private const string CoverFileName = "cover.jpg";
