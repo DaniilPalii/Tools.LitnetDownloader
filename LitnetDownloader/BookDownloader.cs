@@ -1,6 +1,6 @@
 using System.Text;
 using LitnetDownloader.Exceptions;
-using LitnetDownloader.Values;
+using LitnetDownloader.Parsing;
 
 namespace LitnetDownloader;
 
@@ -15,8 +15,10 @@ internal sealed class BookDownloader(
 		(var title, var author, var annotation, var series, var cover) 
 			= await litnetHttpClient.GetBookInfoWebPageAsync(bookSlug, cancellationToken);
 		
-		var epubDocument = new EpubDocument(title, author, annotation)
+		var epubDocument = new EpubDocument(title)
 		{
+			Author = author,
+			Annotation = annotation,
 			Identifier = bookSlug,
 			Cover = cover,
 			Series = series,
@@ -32,8 +34,8 @@ internal sealed class BookDownloader(
 		{
 			foreach(var chapter in chapters)
 			{
-				var chapterContent = await GetChapterContentAsync(bookSlug, chapter, cancellationToken);
-				epubDocument.AddChapter(chapter.Title, chapter.Index, chapterContent);
+				var chapterContent = await GetChapterContentAsync(bookSlug, chapter.Id, cancellationToken);
+				epubDocument.Chapters.Add(new (chapter.Title, chapterContent));
 
 				Console.WriteLine($"Got chapter {chapter.Index}");
 			
@@ -51,7 +53,7 @@ internal sealed class BookDownloader(
 
 	private async Task<string> GetChapterContentAsync(
 		string bookSlug,
-		ChapterInfo chapter,
+		string chapterId,
 		CancellationToken cancellationToken)
 	{
 		var chapterContentBuilder = new StringBuilder();
@@ -62,7 +64,7 @@ internal sealed class BookDownloader(
 			var pageIndex = 1;
 			while (!isPageLast && !cancellationToken.IsCancellationRequested)
 			{
-				(var pageContent, isPageLast) = await litnetHttpClient.GetBookPageContentAsync(bookSlug, chapter.Id, pageIndex, cancellationToken);
+				(var pageContent, isPageLast) = await litnetHttpClient.GetBookPageContentAsync(bookSlug, chapterId, pageIndex, cancellationToken);
 				chapterContentBuilder.Append(pageContent);
 				pageIndex++;
 			}

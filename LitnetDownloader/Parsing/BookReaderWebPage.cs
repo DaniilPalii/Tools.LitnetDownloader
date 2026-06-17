@@ -1,6 +1,6 @@
 using AngleSharp.Html.Parser;
 using LitnetDownloader.Exceptions;
-using LitnetDownloader.Values;
+using LitnetDownloader.Parsing.Values;
 
 namespace LitnetDownloader.Parsing;
 

@@ -3,7 +3,7 @@ using System.Text.Json;
 using AngleSharp.Html.Parser;
 using LitnetDownloader.Exceptions;
 using LitnetDownloader.Parsing;
-using LitnetDownloader.Values;
+using LitnetDownloader.Parsing.Values;
 
 namespace LitnetDownloader;
 
