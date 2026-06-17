@@ -7,14 +7,16 @@ internal class EpubDocument
 {
 	private readonly VieappsEpubDocument internalEpubDocument = new();
 
-	public EpubDocument(string title)
+	public EpubDocument(string title, string author, string annotation)
 	{
 		Title = title;
+		Author = author;
+		Annotation = annotation;
 		
 		AddChapter(
 			index: 0,
 			title: title,
-			content: $"""<img src="{CoverFileName}" alt="{title}" />""");
+			content: IntroChapterContentTemplate);
 	}
 	
 	public string Identifier
@@ -26,7 +28,7 @@ internal class EpubDocument
 	{
 		get => field;
 
-		set
+		private set
 		{  
 			field = value;
 			internalEpubDocument.AddAuthor(value);
@@ -58,10 +60,20 @@ internal class EpubDocument
 			internalEpubDocument.AddTitle(value);
 		}
 	}
+	
+	public string Annotation { get; private set; }
 
-	public string Series
+	public string? Series
 	{
-		set => internalEpubDocument.AddMetaItem("calibre:series", value);
+		get => field;
+
+		set
+		{
+			field = value;
+			
+			if (field is not null)
+				internalEpubDocument.AddMetaItem("calibre:series", value);
+		}
 	}
 
 	public byte[] Cover
@@ -102,7 +114,8 @@ internal class EpubDocument
 	
 	private const string CoverFileName = "cover.jpg";
 	
-	private const string PageTemplate = """
+	private const string PageTemplate = 
+	"""
 		<!DOCTYPE html>
 		<html xmlns="http://www.w3.org/1999/xhtml">
 			<head>
@@ -114,5 +127,11 @@ internal class EpubDocument
 				{1}
 			</body>
 		</html>
-		""";
+	""";
+
+	public string IntroChapterContentTemplate =>
+	$"""
+		<img src="{CoverFileName}" alt="{Title}" />
+		<p>{Annotation}</p>
+	""";
 }

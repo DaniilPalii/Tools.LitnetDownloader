@@ -10,21 +10,21 @@ internal sealed class BookDownloader(
 	public async Task<EpubDocument> DownloadAsEpubAsync(
 		string bookSlug,
 		CancellationToken cancellationToken,
-		Range? chapterRange = null,
-		string? fileName = null)
+		Range? chapterRange = null)
 	{
-		(var title, var author, var chapters) = await litnetHttpClient.GetBookReaderWebPageAsync(bookSlug, cancellationToken);
-		var bookInfoWebPage = await litnetHttpClient.GetBookInfoWebPageAsync(bookSlug, cancellationToken);
+		(var title, var author, var annotation, var series, var cover) 
+			= await litnetHttpClient.GetBookInfoWebPageAsync(bookSlug, cancellationToken);
 		
-		var epubDocument = new EpubDocument(title)
+		var epubDocument = new EpubDocument(title, author, annotation)
 		{
 			Identifier = bookSlug,
-			Author = author,
-			Cover = bookInfoWebPage.Cover,
+			Cover = cover,
+			Series = series,
 		};
-		   
-		Console.WriteLine($"Total number of chapters: {chapters.Length}");
 
+		var chapters = await litnetHttpClient.GetBookChaptersAsync(bookSlug, cancellationToken);
+		Console.WriteLine($"Total number of chapters: {chapters.Length}");
+		
 		if (chapterRange is not null)
 			chapters = chapters[chapterRange.Value];
 

@@ -4,35 +4,26 @@ using LitnetDownloader.Values;
 
 namespace LitnetDownloader.Parsing;
 
-internal record BookReaderWebPage(
-	string Title,
-	string Author,
-	ChapterInfo[] Chapters)
+internal static class BookReaderWebPage
 {
-	public static async Task<BookReaderWebPage> ParseAsync(string webPageHtml, IHtmlParser htmlParser)
+	public static async Task<ChapterInfo[]> GetChaptersInfoAsync(string webPageHtml, IHtmlParser htmlParser)
 	{
 		var htmlDocument = await htmlParser.ParseDocumentAsync(webPageHtml);
 
-		var title = htmlDocument.QuerySelector(".book-heading")?.TextContent.Trim()
-			?? throw new NoDataException("Book title not found");
-	
-		var author = htmlDocument.QuerySelector(".sa-name")?.TextContent.Trim()
-			?? throw new NoDataException("Author not found");
-
 		var chapterIndex = 1;
 		var chapters = htmlDocument
-				.QuerySelector(selectors: "select[name='chapter']")
-				?.QuerySelectorAll(selectors: "option")
-				.Select(
-					selector: option =>
-						new ChapterInfo(
-							Index: chapterIndex++,
-							Id: option.GetAttribute("value") 
-								?? throw new NoDataException("Chapter option without value"),
-							Title: option.TextContent))
-				.ToArray()
+			.QuerySelector(selectors: "select[name='chapter']")
+			?.QuerySelectorAll(selectors: "option")
+			.Select(
+				selector: option =>
+					new ChapterInfo(
+						Index: chapterIndex++,
+						Id: option.GetAttribute("value") 
+						?? throw new NoDataException("Chapter option without value"),
+						Title: option.TextContent))
+			.ToArray()
 			?? throw new NoDataException(message: "No chapter list found");
-		
-		return new(title, author, chapters);
+
+		return chapters;
 	}
 }

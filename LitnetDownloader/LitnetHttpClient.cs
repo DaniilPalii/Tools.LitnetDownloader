@@ -3,6 +3,7 @@ using System.Text.Json;
 using AngleSharp.Html.Parser;
 using LitnetDownloader.Exceptions;
 using LitnetDownloader.Parsing;
+using LitnetDownloader.Values;
 
 namespace LitnetDownloader;
 
@@ -68,7 +69,7 @@ internal class LitnetHttpClient
 		return await BookInfoWebPage.ParseAsync(webPageHtml, htmlParser, httpClient);
 	}
 
-	public async Task<BookReaderWebPage> GetBookReaderWebPageAsync(string bookSlug, CancellationToken cancellationToken)
+	public async Task<ChapterInfo[]> GetBookChaptersAsync(string bookSlug, CancellationToken cancellationToken)
 	{
 		await Task.Delay(BetweenRequestsTimeout, cancellationToken);
 		var bookReaderUrl = BookReaderUrlPrefix + bookSlug;
@@ -76,7 +77,7 @@ internal class LitnetHttpClient
 		var webPageHtml = await httpClient.GetStringAsync(bookReaderUrl, cancellationToken);
 		Console.WriteLine($"Book reader page loaded: {bookReaderUrl}");
 
-		return await BookReaderWebPage.ParseAsync(webPageHtml, htmlParser);
+		return await BookReaderWebPage.GetChaptersInfoAsync(webPageHtml, htmlParser);
 	}
 	
 	public async Task<(string content, bool isPageLast)> GetBookPageContentAsync(

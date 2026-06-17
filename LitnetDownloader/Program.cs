@@ -22,8 +22,7 @@ await litnetHttpClient.AuthenticateAsync(cancellationTokenSource.Token);
 var bookDownloader = new BookDownloader(litnetHttpClient);
 var epubDocument = await bookDownloader.DownloadAsEpubAsync(
 	"nasledie-rozy-tanec-dlya-demona-epizod-2-b418009",
-	cancellationTokenSource.Token,
-	chapterRange: 8..11);
+	cancellationTokenSource.Token);
 
 epubDocument.Series = "Хеллиана Валанди";
 
