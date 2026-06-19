@@ -1,6 +1,7 @@
 using System.Text;
+using AngleSharp;
+using AngleSharp.Html.Parser;
 using LitnetDownloader.Exceptions;
-using LitnetDownloader.Parsing;
 
 namespace LitnetDownloader;
 
@@ -34,7 +35,7 @@ internal sealed class BookDownloader(
 		{
 			foreach(var chapter in chapters)
 			{
-				var chapterContent = await GetChapterContentAsync(bookSlug, chapter.Id, cancellationToken);
+				var chapterContent = await GetChapterContentAsync(bookSlug, chapter.Id, epubDocument, cancellationToken);
 				epubDocument.Chapters.Add(new (chapter.Title, chapterContent));
 
 				Console.WriteLine($"Got chapter {chapter.Index}");
@@ -54,6 +55,7 @@ internal sealed class BookDownloader(
 	private async Task<string> GetChapterContentAsync(
 		string bookSlug,
 		string chapterId,
+		EpubDocument epubDocument,
 		CancellationToken cancellationToken)
 	{
 		var chapterContentBuilder = new StringBuilder();
@@ -65,6 +67,9 @@ internal sealed class BookDownloader(
 			while (!isPageLast && !cancellationToken.IsCancellationRequested)
 			{
 				(var pageContent, isPageLast) = await litnetHttpClient.GetBookPageContentAsync(bookSlug, chapterId, pageIndex, cancellationToken);
+
+				pageContent = await ReplaceRemoteImagesWithLocalAsync(pageContent, epubDocument, cancellationToken);
+
 				chapterContentBuilder.Append(pageContent);
 				pageIndex++;
 			}
@@ -72,5 +77,25 @@ internal sealed class BookDownloader(
 		catch (OperationCanceledException) { }
 		
 		return chapterContentBuilder.ToString();;
+	}
+
+	private async Task<string> ReplaceRemoteImagesWithLocalAsync(
+		string pageContent, 
+		EpubDocument epubDocument,
+		CancellationToken cancellationToken)
+	{
+		var htmlParser = new HtmlParser();
+		using var htmlDocument = await htmlParser.ParseDocumentAsync(pageContent);
+		foreach (var imageElement in htmlDocument.Images)
+		{
+			var imageSource = imageElement.GetAttribute("src")
+				?? throw new NoDataException("Image source not found");
+			
+			var image = await litnetHttpClient.DownloadImageAsync(imageSource, cancellationToken);
+			var localPath = epubDocument.AddIllustration(image);
+			imageElement.SetAttribute("src", localPath);
+		}
+		
+		return htmlDocument.ToHtml();
 	}
 }

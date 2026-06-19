@@ -3,7 +3,7 @@ using System.Text.Json;
 using AngleSharp.Html.Parser;
 using LitnetDownloader.Exceptions;
 using LitnetDownloader.Parsing;
-using LitnetDownloader.Parsing.Values;
+using LitnetDownloader.Values;
 
 namespace LitnetDownloader;
 
@@ -47,7 +47,7 @@ internal class LitnetHttpClient
 			httpClientHandler.CookieContainer.Add(baseUri, cookie);
 
 		var verificationHtml = await httpClient.GetStringAsync(BaseUrl, cancellationToken);
-		var parsedVerificationHtml = await htmlParser.ParseDocumentAsync(verificationHtml);
+		using var parsedVerificationHtml = await htmlParser.ParseDocumentAsync(verificationHtml);
 		var csrfTokenMeta = parsedVerificationHtml.QuerySelector("meta[name='csrf-token']");
 		csrfToken = csrfTokenMeta?.GetAttribute("content") 
 			?? throw new NoDataException("CSRF token not found after login");
@@ -58,7 +58,7 @@ internal class LitnetHttpClient
 		Console.WriteLine("Authentication successful");
 	}
 
-	public async Task<BookInfoWebPage> GetBookInfoWebPageAsync(string bookSlug, CancellationToken cancellationToken)
+	public async Task<BookInfo> GetBookInfoWebPageAsync(string bookSlug, CancellationToken cancellationToken)
 	{
 		await Task.Delay(BetweenRequestsTimeout, cancellationToken);
 		var bookInfoUrl = BookInfoUrlPrefix + bookSlug;
@@ -66,7 +66,15 @@ internal class LitnetHttpClient
 		var webPageHtml = await httpClient.GetStringAsync(bookInfoUrl, cancellationToken);
 		Console.WriteLine($"Book info page loaded: {bookInfoUrl}");
 
-		return await BookInfoWebPage.ParseAsync(webPageHtml, htmlParser, httpClient);
+		var bookInfoPage = await BookInfoWebPage.ParseAsync(webPageHtml, htmlParser);
+		var coverImage = await DownloadImageAsync(bookInfoPage.CoverSource, cancellationToken);
+		
+		return new BookInfo(
+			bookInfoPage.Title,
+			bookInfoPage.Author,
+			bookInfoPage.Annotation,
+			bookInfoPage.Series,
+			coverImage);
 	}
 
 	public async Task<ChapterInfo[]> GetBookChaptersAsync(string bookSlug, CancellationToken cancellationToken)
@@ -118,6 +126,26 @@ internal class LitnetHttpClient
 			&& isLastString.GetBoolean();
 
 		return (content, isLast);
+	}
+	
+	public async Task<byte[]> DownloadImageAsync(string imageSource, CancellationToken cancellationToken)
+	{
+		if (imageSource.StartsWith("//"))
+			imageSource = "https:" + imageSource;
+
+		// Expected URL is similar to https://publiccdn.litnet.com/books/covers/0/1668613814_74.jpg
+		if (!Uri.TryCreate(imageSource, UriKind.Absolute, out var imageUri)
+			|| (imageUri.Scheme != Uri.UriSchemeHttp && imageUri.Scheme != Uri.UriSchemeHttps))
+		{
+			throw new NoDataException("Cover image URL is not an absolute HTTP/HTTPS URL");
+		}
+
+		using var imageResponse = await httpClient.GetAsync(imageUri, cancellationToken);
+		 
+		if (!imageResponse.IsSuccessStatusCode)
+			throw new NoDataException("Failed to download cover image");
+		
+		return await imageResponse.Content.ReadAsByteArrayAsync(cancellationToken);
 	}
 	
 	private async Task<HttpResponseMessage> PostAsync(

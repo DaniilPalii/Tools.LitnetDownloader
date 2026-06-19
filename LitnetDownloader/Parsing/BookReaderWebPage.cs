@@ -1,6 +1,6 @@
 using AngleSharp.Html.Parser;
 using LitnetDownloader.Exceptions;
-using LitnetDownloader.Parsing.Values;
+using LitnetDownloader.Values;
 
 namespace LitnetDownloader.Parsing;
 
@@ -8,7 +8,7 @@ internal static class BookReaderWebPage
 {
 	public static async Task<ChapterInfo[]> GetChaptersInfoAsync(string webPageHtml, IHtmlParser htmlParser)
 	{
-		var htmlDocument = await htmlParser.ParseDocumentAsync(webPageHtml);
+		using var htmlDocument = await htmlParser.ParseDocumentAsync(webPageHtml);
 
 		var chapterIndex = 1;
 		var chapters = htmlDocument

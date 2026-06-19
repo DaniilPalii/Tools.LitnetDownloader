@@ -25,6 +25,14 @@ internal class EpubDocument(string title)
 
 	public List<Chapter> Chapters { get; } = [];
 
+	public string AddIllustration(byte[] illustration)
+	{
+		var fileName = $"{ImageDirectoryPath}/illustration{illustration.Length}.xhtml";
+		illustrations.Add(new (fileName, illustration));
+		
+		return fileName;
+	}
+
 	public string WriteToFile(string? fileName = null)
 	{
 		var internalEpubDocument = new VieappsEpubDocument();
@@ -48,7 +56,15 @@ internal class EpubDocument(string title)
 			internalEpubDocument.AddMetaItem("calibre:series", Series);
 
 		if (Cover is not null)
-			AddImage(internalEpubDocument, "cover", CoverFileName, Cover);
+		{
+			var coverFileId = internalEpubDocument.AddImageData(CoverFilePath, Cover);
+			internalEpubDocument.AddMetaItem("cover", coverFileId);
+		}
+
+		foreach (var illustration in illustrations)
+		{
+			internalEpubDocument.AddImageData(illustration.FilePath, illustration.Bytes);
+		}
 		
 		fileName ??= $"{Author} - {Title}.epub";
 		fileName = FileName.Sanitize(fileName);
@@ -68,7 +84,7 @@ internal class EpubDocument(string title)
 	private void AddTitlePage(VieappsEpubDocument internalEpubDocument, int chapterIndex)
 	{
 		var coverImg = Cover is not null
-			? /* lang=xhtml */ $"""<img src="{CoverFileName}" alt="Cover" />"""
+			? /* lang=xhtml */ $"""<img src="{CoverFilePath}" alt="Cover" />"""
 			: string.Empty;
 		
 		var annotation = Annotation is not null
@@ -100,14 +116,11 @@ internal class EpubDocument(string title)
 		internalEpubDocument.AddXhtmlData(chapterFileName, xhtmlContent);
 		internalEpubDocument.AddNavPoint(title, chapterFileName, index);
 	}
+	
+	private readonly List<Illustration> illustrations = [];
 
-	private static void AddImage(VieappsEpubDocument internalEpubDocument, string metaName, string fileName, byte[] image)
-	{
-		var imageId = internalEpubDocument.AddImageData(fileName, image);
-		internalEpubDocument.AddMetaItem(metaName, imageId);
-	}
-
-	private const string CoverFileName = "cover.jpg";
+	private const string CoverFilePath = $"{ImageDirectoryPath}/cover.jpg";
+	private const string ImageDirectoryPath = "images";
 
 	public class Chapter(string title, string content)
 	{
@@ -115,4 +128,6 @@ internal class EpubDocument(string title)
 		
 		public string Content { get; set; } = content;
 	}
+	
+	private record Illustration(string FilePath, byte[] Bytes);
 }

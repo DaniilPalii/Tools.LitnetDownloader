@@ -1,4 +1,4 @@
-namespace LitnetDownloader.Parsing.Values;
+namespace LitnetDownloader.Values;
 
 public record struct ChapterInfo(
 	int Index,
