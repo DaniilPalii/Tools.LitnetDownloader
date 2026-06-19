@@ -25,10 +25,13 @@ internal class EpubDocument(string title)
 
 	public List<Chapter> Chapters { get; } = [];
 
-	public string AddIllustration(byte[] illustration)
+	public string AddIllustration(byte[] illustration, string source)
 	{
+		if (illustrations.FirstOrDefault(i => i.Source == source) is { } existingIllustration)
+			return existingIllustration.FilePath;
+
 		var fileName = $"{ImageDirectoryPath}/illustration{illustration.Length}.xhtml";
-		illustrations.Add(new (fileName, illustration));
+		illustrations.Add(new (fileName, illustration, source));
 		
 		return fileName;
 	}
@@ -129,5 +132,8 @@ internal class EpubDocument(string title)
 		public string Content { get; set; } = content;
 	}
 	
-	private record Illustration(string FilePath, byte[] Bytes);
+	private record Illustration(
+		string FilePath,
+		byte[] Bytes,
+		string Source);
 }

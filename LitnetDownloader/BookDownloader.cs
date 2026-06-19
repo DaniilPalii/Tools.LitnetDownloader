@@ -92,7 +92,7 @@ internal sealed class BookDownloader(
 				?? throw new NoDataException("Image source not found");
 			
 			var image = await litnetHttpClient.DownloadImageAsync(imageSource, cancellationToken);
-			var localPath = epubDocument.AddIllustration(image);
+			var localPath = epubDocument.AddIllustration(image, imageSource);
 			imageElement.SetAttribute("src", localPath);
 		}
 		
