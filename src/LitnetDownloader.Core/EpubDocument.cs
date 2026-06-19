@@ -1,9 +1,9 @@
-using LitnetDownloader.Helpers;
+using LitnetDownloader.Core.Helpers;
 using VieappsEpubDocument = net.vieapps.Components.Utility.Epub.Document;
 
-namespace LitnetDownloader;
+namespace LitnetDownloader.Core;
 
-internal class EpubDocument(string title)
+public class EpubDocument(string title)
 {
 	public string Title { get; set; } = title;
 

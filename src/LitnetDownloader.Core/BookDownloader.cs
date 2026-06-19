@@ -1,11 +1,11 @@
 using System.Text;
 using AngleSharp;
 using AngleSharp.Html.Parser;
-using LitnetDownloader.Exceptions;
+using LitnetDownloader.Core.Exceptions;
 
-namespace LitnetDownloader;
+namespace LitnetDownloader.Core;
 
-internal sealed class BookDownloader(
+public sealed class BookDownloader(
 	LitnetHttpClient litnetHttpClient)
 {
 	public async Task<EpubDocument> DownloadAsEpubAsync(

@@ -1,8 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LitnetDownloader", "LitnetDownloader\LitnetDownloader.csproj", "{50C4F79C-ACF7-4B8E-834B-10B74970033B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LitnetDownloader.Core", "src\LitnetDownloader.Core\LitnetDownloader.Core.csproj", "{3939E668-454E-4AD5-B02E-EA6B0CAD5FD3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LitnetDownloader.Tests.Unit", "tests\LitnetDownloader.Tests.Unit\LitnetDownloader.Tests.Unit.csproj", "{4D946D1A-1CF6-4948-BAFF-58762FC4C584}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LitnetDownloader.ConsoleApplication", "src\LitnetDownloader.ConsoleApplication\LitnetDownloader.ConsoleApplication.csproj", "{B2A6FA43-A382-412C-A3A0-F6460625C857}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{F8A5899A-C242-4434-B889-8FC943FFE692}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LitnetDownloader.Core.Tests.UnitTests", "tests\LitnetDownloader.Core.Tests.UnitTests\LitnetDownloader.Core.Tests.UnitTests.csproj", "{7BF5F972-A990-4B54-B97A-6C3B42CCB328}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -10,13 +14,20 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{50C4F79C-ACF7-4B8E-834B-10B74970033B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{50C4F79C-ACF7-4B8E-834B-10B74970033B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{50C4F79C-ACF7-4B8E-834B-10B74970033B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{50C4F79C-ACF7-4B8E-834B-10B74970033B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4D946D1A-1CF6-4948-BAFF-58762FC4C584}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4D946D1A-1CF6-4948-BAFF-58762FC4C584}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4D946D1A-1CF6-4948-BAFF-58762FC4C584}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4D946D1A-1CF6-4948-BAFF-58762FC4C584}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3939E668-454E-4AD5-B02E-EA6B0CAD5FD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3939E668-454E-4AD5-B02E-EA6B0CAD5FD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3939E668-454E-4AD5-B02E-EA6B0CAD5FD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3939E668-454E-4AD5-B02E-EA6B0CAD5FD3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2A6FA43-A382-412C-A3A0-F6460625C857}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2A6FA43-A382-412C-A3A0-F6460625C857}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2A6FA43-A382-412C-A3A0-F6460625C857}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2A6FA43-A382-412C-A3A0-F6460625C857}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BF5F972-A990-4B54-B97A-6C3B42CCB328}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BF5F972-A990-4B54-B97A-6C3B42CCB328}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BF5F972-A990-4B54-B97A-6C3B42CCB328}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BF5F972-A990-4B54-B97A-6C3B42CCB328}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7BF5F972-A990-4B54-B97A-6C3B42CCB328} = {F8A5899A-C242-4434-B889-8FC943FFE692}
 	EndGlobalSection
 EndGlobal

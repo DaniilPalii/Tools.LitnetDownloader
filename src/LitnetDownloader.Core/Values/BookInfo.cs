@@ -1,4 +1,4 @@
-namespace LitnetDownloader.Values;
+namespace LitnetDownloader.Core.Values;
 
 public record BookInfo(
 	string Title,

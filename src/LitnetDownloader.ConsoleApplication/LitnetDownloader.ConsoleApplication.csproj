@@ -8,9 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="AngleSharp" Version="1.4.0" />
-      <PackageReference Include="Microsoft.Playwright" Version="1.60.0" />
-      <PackageReference Include="VIEApps.Components.Utility.Epub" Version="10.10.2606.1" />
+      <ProjectReference Include="..\LitnetDownloader.Core\LitnetDownloader.Core.csproj" />
     </ItemGroup>
 
 </Project>

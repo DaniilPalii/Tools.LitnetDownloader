@@ -1,9 +1,9 @@
 using System.Net;
 using System.Text.Json;
 
-namespace LitnetDownloader;
+namespace LitnetDownloader.Core;
 
-public static class CookieStorage
+internal static class CookieStorage
 {
 	private static readonly string FilePath = Path.Combine(AppContext.BaseDirectory, ".cookies");
 	

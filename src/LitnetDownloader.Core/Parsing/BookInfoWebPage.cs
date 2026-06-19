@@ -1,8 +1,8 @@
-using AngleSharp.Html.Parser;
-using LitnetDownloader.Exceptions;
 using AngleSharp.Html.Dom;
+using AngleSharp.Html.Parser;
+using LitnetDownloader.Core.Exceptions;
 
-namespace LitnetDownloader.Parsing;
+namespace LitnetDownloader.Core.Parsing;
 
 internal record BookInfoWebPage(
 	string Title,

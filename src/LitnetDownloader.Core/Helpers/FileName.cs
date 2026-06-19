@@ -1,6 +1,6 @@
-namespace LitnetDownloader.Helpers;
+namespace LitnetDownloader.Core.Helpers;
 
-public class FileName
+internal class FileName
 {
 	public static string Sanitize(string fileName)
 	{

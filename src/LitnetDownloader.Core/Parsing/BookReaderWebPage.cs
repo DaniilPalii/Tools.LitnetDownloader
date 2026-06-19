@@ -1,8 +1,8 @@
 using AngleSharp.Html.Parser;
-using LitnetDownloader.Exceptions;
-using LitnetDownloader.Values;
+using LitnetDownloader.Core.Exceptions;
+using LitnetDownloader.Core.Values;
 
-namespace LitnetDownloader.Parsing;
+namespace LitnetDownloader.Core.Parsing;
 
 internal static class BookReaderWebPage
 {

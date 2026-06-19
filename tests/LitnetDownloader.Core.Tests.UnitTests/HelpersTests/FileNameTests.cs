@@ -1,6 +1,6 @@
-using LitnetDownloader.Helpers;
+using LitnetDownloader.Core.Helpers;
 
-namespace LitnetDownloader.Tests.Unit.HelpersTests;
+namespace LitnetDownloader.Tests.UnitTests.CoreTests.HelpersTests;
 
 [TestFixture]
 public class FileNameTests

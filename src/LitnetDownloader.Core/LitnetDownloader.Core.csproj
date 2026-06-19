@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AngleSharp" Version="1.5.1" />
+      <PackageReference Include="Microsoft.Playwright" Version="1.60.0" />
+      <PackageReference Include="VIEApps.Components.Utility.Epub" Version="10.10.2606.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="LitnetDownloader.Core.Tests.UnitTests" />
+    </ItemGroup>
+
+</Project>

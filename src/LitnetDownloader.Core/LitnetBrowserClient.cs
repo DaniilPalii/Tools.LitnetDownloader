@@ -1,8 +1,8 @@
 using Microsoft.Playwright;
 
-namespace LitnetDownloader;
+namespace LitnetDownloader.Core;
 
-public class LitnetBrowserClient
+internal class LitnetBrowserClient
 {
 	private const string LoginUrl = "https://litnet.com/auth/login?classic=1&link=https%3A%2F%2Flitnet.com%2F";
 	

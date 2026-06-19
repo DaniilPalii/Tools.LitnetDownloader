@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
+        <RootNamespace>LitnetDownloader.Tests.UnitTests.CoreTests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -21,7 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\LitnetDownloader\LitnetDownloader.csproj" />
+      <ProjectReference Include="..\..\src\LitnetDownloader.Core\LitnetDownloader.Core.csproj" />
     </ItemGroup>
 
 </Project>

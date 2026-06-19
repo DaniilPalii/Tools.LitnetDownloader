@@ -1,13 +1,13 @@
 using System.Net;
 using System.Text.Json;
 using AngleSharp.Html.Parser;
-using LitnetDownloader.Exceptions;
-using LitnetDownloader.Parsing;
-using LitnetDownloader.Values;
+using LitnetDownloader.Core.Exceptions;
+using LitnetDownloader.Core.Parsing;
+using LitnetDownloader.Core.Values;
 
-namespace LitnetDownloader;
+namespace LitnetDownloader.Core;
 
-internal class LitnetHttpClient
+public class LitnetHttpClient
 {
 	public TimeSpan BetweenRequestsTimeout { get; set; } = TimeSpan.FromSeconds(seconds: 3);
 	

@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using LitnetDownloader;
+using LitnetDownloader.Core;
 
 Console.OutputEncoding = Encoding.UTF8;
 Console.InputEncoding = Encoding.UTF8;
