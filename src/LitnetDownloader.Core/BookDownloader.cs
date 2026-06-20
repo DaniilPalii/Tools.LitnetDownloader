@@ -2,6 +2,7 @@ using System.Text;
 using AngleSharp;
 using AngleSharp.Html.Parser;
 using LitnetDownloader.Core.Exceptions;
+using LitnetDownloader.Core.Helpers;
 
 namespace LitnetDownloader.Core;
 
@@ -9,10 +10,12 @@ public sealed class BookDownloader(
 	LitnetHttpClient litnetHttpClient)
 {
 	public async Task<EpubDocument> DownloadAsEpubAsync(
-		string bookSlug,
+		string bookUrl,
 		CancellationToken cancellationToken,
 		Range? chapterRange = null)
 	{
+		var bookSlug = bookUrl.SubstringAfterLast('/');
+
 		(var title, var author, var annotation, var series, var cover) 
 			= await litnetHttpClient.GetBookInfoWebPageAsync(bookSlug, cancellationToken);
 		
