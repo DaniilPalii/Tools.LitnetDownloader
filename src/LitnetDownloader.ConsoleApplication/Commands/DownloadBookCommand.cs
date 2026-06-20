@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using LitnetDownloader.Core;
+using LitnetDownloader.Core.Helpers;
 using Spectre.Console.Cli;
 
 namespace LitnetDownloader.ConsoleApplication.Commands;
@@ -18,13 +19,19 @@ public class DownloadBookCommand : AsyncCommand<DownloadBookCommandSettings>
 		DownloadBookCommandSettings settings,
 		CancellationToken cancellationToken)
 	{
+		if (!BookUrl.TryGetSlug(settings.BookUrl, out var bookSlug))
+		{
+			Console.WriteLine("Invalid book URL.");
+			return 1;
+		}
+
 		var litnetHttpClient = new LitnetHttpClient();
 
 		await litnetHttpClient.AuthenticateAsync(cancellationToken);
 
 		var bookDownloader = new BookDownloader(litnetHttpClient);
 		var epubDocument = await bookDownloader.DownloadAsEpubAsync(
-			settings.BookUrl,
+			bookSlug,
 			cancellationToken,
 			chapterRange: ..1);
 
