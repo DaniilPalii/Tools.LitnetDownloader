@@ -5,9 +5,11 @@ using LitnetDownloader.Core.Exceptions;
 
 namespace LitnetDownloader.Core;
 
-public sealed class BookDownloader(
-	LitnetHttpClient litnetHttpClient)
+public sealed class BookDownloader(LitnetHttpClient litnetHttpClient)
 {
+	public Task AuthenticateAsync(CancellationToken cancellationToken, bool forceLogin = false) 
+		=> litnetHttpClient.AuthenticateAsync(cancellationToken, forceLogin);
+
 	public async Task<EpubDocument> DownloadAsEpubAsync(
 		string bookSlug,
 		CancellationToken cancellationToken,

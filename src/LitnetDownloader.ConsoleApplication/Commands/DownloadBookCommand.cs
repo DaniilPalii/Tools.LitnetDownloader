@@ -10,9 +10,15 @@ public class DownloadBookCommandSettings : CommandSettings
 	[CommandArgument(position: 0, template: "<book-url>")]
 	[Description("URL of the book to download")]
 	public required string BookUrl { get; init; }
+	
+	[CommandOption("-f|--forceLogin")]
+	[Description("Prompt login even if previous login is saved")]
+	[DefaultValue(false)]
+	public bool ForceLogin { get; init; } = false;
 }
 
-public class DownloadBookCommand : AsyncCommand<DownloadBookCommandSettings>
+public class DownloadBookCommand(BookDownloader bookDownloader)
+	: AsyncCommand<DownloadBookCommandSettings>
 {
 	protected override async Task<int> ExecuteAsync(
 		CommandContext context,
@@ -25,11 +31,8 @@ public class DownloadBookCommand : AsyncCommand<DownloadBookCommandSettings>
 			return 1;
 		}
 
-		var litnetHttpClient = new LitnetHttpClient();
+		await bookDownloader.AuthenticateAsync(cancellationToken, settings.ForceLogin);
 
-		await litnetHttpClient.AuthenticateAsync(cancellationToken);
-
-		var bookDownloader = new BookDownloader(litnetHttpClient);
 		var epubDocument = await bookDownloader.DownloadAsEpubAsync(
 			bookSlug,
 			cancellationToken,
