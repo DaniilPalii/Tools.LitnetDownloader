@@ -26,11 +26,12 @@ public class LitnetHttpClient
 		(httpClient, httpClientHandler) = CreateHttpClient();
 	}
 
-	public async Task AuthenticateAsync(CancellationToken cancellationToken)
+	public async Task AuthenticateAsync(
+		CancellationToken cancellationToken,
+		bool forceLogin = false)
 	{
-		var cookies = await CookieStorage.LoadCookiesAsync();
-
-		if (cookies.Count > 0)
+		if (!forceLogin
+			&& await CookieStorage.LoadCookiesAsync() is { Count: > 0 } cookies)
 		{
 			Console.WriteLine($"Loaded {cookies.Count} cookies from storage");
 		}
